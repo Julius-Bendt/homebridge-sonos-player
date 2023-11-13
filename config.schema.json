@@ -1,0 +1,65 @@
+{
+  "pluginAlias": "SonosPlayerJub",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "switches": {
+        "title": "Switches",
+        "description": "Here you setup how many switches you want. Each switch can take either a trackUri or a an array for TTS.",
+        "type": "array",
+        "required": true,
+        "items": {
+          "title": "Device setup",
+          "description": "Use this to setup different switches, which will send a audio file to sonos",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name",
+              "description": "Name of the switch",
+              "type": "string",
+              "required": true
+            },
+            "trackUri": {
+              "title": "Track uri",
+              "description": "Location of the audio file to be played. The location should be available for Sonos",
+              "type": "string",
+              "required": true
+            },
+            "sonosSpeakerNames": {
+              "title": "Sonos speaker names",
+              "description": "Use this to control which sonos speakers should be played when the switch activates",
+              "type": "array",
+              "required": true,
+              "items": {
+                "title": "speaker name",
+                "description": "",
+                "type": "string",
+                "required": true
+              }
+            },
+            "volume": {
+              "title": "Volume",
+              "description": "Volume to play the song at",
+              "type": "number",
+              "default": 25
+            },
+            "delay": {
+              "title": "Delay",
+              "description": "Delay between the On event is sent, and the audio is played",
+              "type": "number",
+              "default": 100
+            },
+            "timeout": {
+              "title": "Timeout",
+              "description": "When should Sonos return to the track playing before in seconds. Add two seconds to you audio for best results",
+              "type": "number",
+              "default": 10
+            }
+          }
+        }
+      }
+    }
+  }
+}
