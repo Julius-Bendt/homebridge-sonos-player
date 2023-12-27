@@ -5,4 +5,5 @@ export interface IPluginDevice {
     delay: number;
     timeout: number;
     sonosDeviceNames: Array<string>;
+    isNotification: boolean;
 }

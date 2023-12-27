@@ -1,8 +1,10 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { SonosHomebridgePlatform } from './SonosHomebridgePlatform';
-import { SonosDevice } from '@svrooij/sonos/lib';
 import { IPluginDevice } from './interfaces/IPluginDevice';
+
+import { SonosDevice } from '@svrooij/sonos/lib';
+import { PlayNotificationOptions } from '@svrooij/sonos/lib/models';
 
 export class SonosPlatformAccessory {
   private service: Service;
@@ -58,11 +60,6 @@ export class SonosPlatformAccessory {
     const isOn = this.state.on;
     this.platform.log.debug(`Get Characteristic On for '${this.pluginDevice.name}' ->`, isOn);
 
-    if (!isOn) {
-      this.platform.log.info(`Stopping plugin device  ${this.pluginDevice.name}`);
-      await this.stopPlaying();
-    }
-
     return isOn;
   }
 
@@ -74,14 +71,28 @@ export class SonosPlatformAccessory {
     try {
       sonos.forEach(device => {
 
-        // If you're reading the code, and wondering why I'm not using the PlayNotification-function
-        // I had lots of trouble with it - these three functions below seems to work like a charm.
-        // It is, however, not pretty
-        promises.push(device.Stop());
-        promises.push(device.SetAVTransportURI(this.pluginDevice.trackUri));
-        promises.push(device.SetVolume(this.pluginDevice.volume));
+        if (this.pluginDevice.isNotification) {
+          const options: PlayNotificationOptions = {
+            trackUri: this.pluginDevice.trackUri,
+            delayMs: this.pluginDevice.delay,
+            timeout: this.pluginDevice.timeout,
+            volume: this.pluginDevice.volume,
+          };
+
+          promises.push(device.PlayNotification(options));
+
+        } else {
+          // If you're reading the code, and wondering why I'm not using the PlayNotification-function
+          // I had lots of trouble with it - these three functions below seems to work like a charm.
+          // It is, however, not pretty
+          promises.push(device.Stop());
+          promises.push(device.SetAVTransportURI(this.pluginDevice.trackUri));
+          promises.push(device.SetVolume(this.pluginDevice.volume));
+        }
+
 
       });
+
       await Promise.all(promises);
 
     } catch (exception) {
