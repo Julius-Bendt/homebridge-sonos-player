@@ -5,6 +5,12 @@
   "schema": {
     "type": "object",
     "properties": {
+      "discoverFrom": {
+        "title": "DiscoverFrom",
+        "description": "If auto discovery wont work for you, insert an static ip to a Sonos device here. In most cases, you can leave this blank",
+        "type": "string",
+        "required": false
+      },
       "switches": {
         "title": "Switches",
         "description": "Here you setup how many switches you want. Each switch can take either a trackUri or a an array for TTS.",
@@ -25,7 +31,7 @@
               "title": "notification",
               "description": "Notifications allows Sonos to continue playing what was playing before. Volume will also return to pre-toggle volume. Not recommended if multiple speakers are in use.",
               "type": "boolean",
-              "required": true
+              "required": false
             },
             "trackUri": {
               "title": "Track uri",
