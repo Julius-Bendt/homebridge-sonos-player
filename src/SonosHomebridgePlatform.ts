@@ -1,6 +1,6 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { SonosDevice, SonosManager } from '@svrooij/sonos';
+import { SonosDevice, SonosDeviceDiscovery, SonosManager } from '@svrooij/sonos';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { SonosPlatformAccessory } from './SonosPlatformAccessory';
@@ -60,7 +60,14 @@ export class SonosHomebridgePlatform implements DynamicPlatformPlugin {
   async setupPlugin(): Promise<boolean> {
 
     try {
-      await this.sonosManager.InitializeWithDiscovery(10);
+
+      if (this.pluginConfig.discoverFrom !== undefined) {
+        this.log.info('Initializing from device with ip: ' + this.pluginConfig.discoverFrom);
+        this.sonosManager.InitializeFromDevice(this.pluginConfig.discoverFrom);
+      } else {
+        this.log.info('Initializing with auto discovery');
+        await this.sonosManager.InitializeWithDiscovery(10);
+      }
 
       this.sonosManager.Devices.forEach(device => {
         this.log.info('Device "%s" joined in %s', device.Name, device.GroupName ?? 'No group');
@@ -143,6 +150,7 @@ export class SonosHomebridgePlatform implements DynamicPlatformPlugin {
 
     const pluginConfig: IPluginConfig = {
       switches: switches,
+      discoverFrom: this.config.discoverFrom ?? undefined,
     };
 
     return pluginConfig;

@@ -25,6 +25,7 @@ Either configure the plugin using the homebridge web ui, or though json:
 ```json
 {
   "platform": "SonosPlayerJub",
+  "discoverFrom": "192.168.1.1"
   "switches": [
     {
       "name": "Switch name goes here - this will be seen in the home app",
@@ -32,7 +33,8 @@ Either configure the plugin using the homebridge web ui, or though json:
       "volume": 10,
       "delay": 100,
       "timeout": 10,
-      "sonosSpeakerNames": ["Sonos-1"]
+      "sonosSpeakerNames": ["Sonos-1"],
+      "notification": true
     },
     {
       "name": "Switch name goes here - this will be seen in the home app",
@@ -40,13 +42,15 @@ Either configure the plugin using the homebridge web ui, or though json:
       "volume": 10,
       "delay": 100,
       "timeout": 10,
-      "sonosSpeakerNames": ["Sonos-1", "Sonos-2"]
+      "sonosSpeakerNames": ["Sonos-1", "Sonos-2"],
+      "notification": false
     }
   ]
 }
 ```
 
 - `platform` **required**: must always be "SonosPlayerJub"
+- `discoverFrom` **optional**: If you have problems with auto discovery, try setting a sonos ip in here.
 
 Switch object:
 
@@ -56,6 +60,7 @@ Switch object:
 - `volume` optional: Volume (in procentage) the speaker(s) should change to. Reverts back to the volume it was before the switch getting activated. Defaults to 25%.
 - `delay` optional: Delay (in ms) between the toggle on, and the audio plays. Defaults to 100ms
 - `timeout` optional: When Sonos should return to the original track (in seconds). I recommend setting this to the audio length in seconds + 2
+- `isNotification` optional: When playing as a notification, the track and volume will return to what was playing before the plugin triggered a new track
 
 ## Thanks to:
 
