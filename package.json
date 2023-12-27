@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Homebridge Sonos Player",
   "name": "homebridge-sonos-player",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "A plugin for Homebridge for starting mp3 files on Sonos speakers using switches.",
   "license": "Apache-2.0",
   "author": {
