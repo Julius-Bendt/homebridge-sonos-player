@@ -21,6 +21,12 @@
               "type": "string",
               "required": true
             },
+            "isNotification": {
+              "title": "notification",
+              "description": "Notifications allows Sonos to continue playing what was playing before. Volume will also return to pre-toggle volume. Not recommended if multiple speakers are in use.",
+              "type": "boolean",
+              "required": true
+            },
             "trackUri": {
               "title": "Track uri",
               "description": "Location of the audio file to be played. The location should be available for Sonos",
@@ -47,13 +53,13 @@
             },
             "delay": {
               "title": "Delay",
-              "description": "Delay between the On event is sent, and the audio is played",
+              "description": "Delay between the On event is sent, and the audio is played. Only used when 'isNotification' is toggled on",
               "type": "number",
               "default": 100
             },
             "timeout": {
               "title": "Timeout",
-              "description": "When should Sonos return to the track playing before in seconds. Add two seconds to you audio for best results",
+              "description": "When should Sonos return to the track playing before in seconds. Add two seconds to you audio for best results. Only used when 'isNotification' is toggled on",
               "type": "number",
               "default": 10
             }

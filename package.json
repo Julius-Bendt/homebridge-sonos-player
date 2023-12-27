@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "displayName": "Homebridge Sonos Player",
   "name": "homebridge-sonos-player",
   "version": "1.0.1",

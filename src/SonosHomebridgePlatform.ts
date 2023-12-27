@@ -137,6 +137,7 @@ export class SonosHomebridgePlatform implements DynamicPlatformPlugin {
         volume: device.volume ?? 25,
         delay: device.delay ?? 100,
         timeout: device.timeout ?? 10,
+        isNotification: device.isNotification ?? false,
       });
     });
 
