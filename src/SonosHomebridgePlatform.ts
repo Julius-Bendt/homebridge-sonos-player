@@ -1,6 +1,6 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { SonosDevice, SonosDeviceDiscovery, SonosManager } from '@svrooij/sonos';
+import { SonosDevice, SonosManager } from '@svrooij/sonos';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { SonosPlatformAccessory } from './SonosPlatformAccessory';
@@ -63,7 +63,7 @@ export class SonosHomebridgePlatform implements DynamicPlatformPlugin {
 
       if (this.pluginConfig.discoverFrom !== undefined) {
         this.log.info('Initializing from device with ip: ' + this.pluginConfig.discoverFrom);
-        this.sonosManager.InitializeFromDevice(this.pluginConfig.discoverFrom);
+        await this.sonosManager.InitializeFromDevice(this.pluginConfig.discoverFrom);
       } else {
         this.log.info('Initializing with auto discovery');
         await this.sonosManager.InitializeWithDiscovery(10);
