@@ -43,6 +43,9 @@ export class SonosPlatformAccessory {
       this.platform.log.debug(`Skipping setting on value for ${this.pluginDevice.name}`);
       return;
     }
+
+    // Immediately set the state to reflect the UI change
+    this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(castedValue);
     this.state.on = castedValue;
 
     if (!castedValue) {
@@ -52,11 +55,19 @@ export class SonosPlatformAccessory {
     }
 
     this.platform.log.info(`Playing plugin device ${this.pluginDevice.name}`);
-    await this.playNotification();
 
-    // Deactivate the switch, after the sound has been played
-    this.state.on = false;
+    try {
+      await this.playNotification();
+    } finally {
+      // Deactivate the switch after the sound has been played
+      this.state.on = false;
+      this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
+
+      this.platform.log.debug(`Setting switch to false: ${this.pluginDevice.name}`);
+
+    }
   }
+
 
   async getOn(): Promise<CharacteristicValue> {
     const isOn = this.state.on;
@@ -66,56 +77,45 @@ export class SonosPlatformAccessory {
   }
 
   async playNotification() {
-    const sonos: Array<SonosDevice> = this.findDevices();
-    let promises: Array<Promise<boolean>> = [];
+    const sonosDevices: SonosDevice[] = this.findDevices();
 
-    // First, set the desired data:
     try {
-      sonos.forEach(device => {
+      const initialPromises = sonosDevices.map(device => this.sendNotification(device));
+      await Promise.all(initialPromises);
 
-        if (this.pluginDevice.isNotification) {
-          const options: PlayNotificationOptions = {
-            trackUri: this.pluginDevice.trackUri,
-            delayMs: this.pluginDevice.delay,
-            timeout: this.pluginDevice.timeout,
-            volume: this.pluginDevice.volume,
-          };
+      // If the device is a notification, no need to play
+      if (this.pluginDevice.isNotification) {
+        return;
+      }
 
-          promises.push(device.PlayNotification(options));
+      const playPromises = sonosDevices.map(device => device.Play());
+      await Promise.all(playPromises);
 
-        } else {
-          // If you're reading the code, and wondering why I'm not using the PlayNotification-function
-          // I had lots of trouble with it - these three functions below seems to work like a charm.
-          // It is, however, not pretty
-          promises.push(device.Stop());
-          promises.push(device.SetAVTransportURI(this.pluginDevice.trackUri));
-          promises.push(device.SetVolume(this.pluginDevice.volume));
-        }
+    } catch (error) {
+      this.platform.log.error('Error while handling Sonos devices:', error);
+    }
+  }
 
-
-      });
-
-      await Promise.all(promises);
-
-    } catch (exception) {
-      this.platform.log.error('Error while sending data to sonos: ', exception);
+  private async sendNotification(device: SonosDevice): Promise<void> {
+    if (this.pluginDevice.isNotification) {
+      const options: PlayNotificationOptions = {
+        trackUri: this.pluginDevice.trackUri,
+        delayMs: this.pluginDevice.delay,
+        timeout: this.pluginDevice.timeout,
+        volume: this.pluginDevice.volume,
+      };
+      await device.PlayNotification(options);
       return;
     }
 
-    // Play on all the sonos speakers configured for this switch
-    try {
-      promises = [];
-
-      sonos.forEach(device => {
-        promises.push(device.Play());
-      });
-
-      await Promise.all(promises);
-
-    } catch (exception) {
-      this.platform.log.error('Error while sending play request to sonos:', exception);
-      return;
-    }
+    // If you're reading the code, and wondering why I'm not using the PlayNotification-function
+    // I had lots of trouble with it - these three functions below seems to work like a charm.
+    // It is, however, not pretty
+    await Promise.all([
+      device.Stop(),
+      device.SetAVTransportURI(this.pluginDevice.trackUri),
+      device.SetVolume(this.pluginDevice.volume),
+    ]);
   }
 
   stopPlaying() {
