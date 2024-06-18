@@ -46,14 +46,16 @@ export class SonosPlatformAccessory {
     this.state.on = castedValue;
 
     if (!castedValue) {
-      this.platform.log.info(`Stopping plugin device  ${this.pluginDevice.name}`);
+      this.platform.log.info(`Stopping plugin device ${this.pluginDevice.name}`);
       this.stopPlaying();
       return;
     }
 
-    this.platform.log.info(`Playing plugin device  ${this.pluginDevice.name}`);
-    this.playNotification();
+    this.platform.log.info(`Playing plugin device ${this.pluginDevice.name}`);
+    await this.playNotification();
 
+    // Deactivate the switch, after the sound has been played
+    this.state.on = false;
   }
 
   async getOn(): Promise<CharacteristicValue> {
