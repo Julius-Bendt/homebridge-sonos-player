@@ -4,7 +4,9 @@ import { SonosHomebridgePlatform } from './SonosHomebridgePlatform';
 import { IPluginDevice } from './interfaces/IPluginDevice';
 
 import { SonosDevice } from '@svrooij/sonos/lib';
-import { PlayNotificationOptions } from '@svrooij/sonos/lib/models';
+import { NotificationStrategy } from './strategies/NotificationStrategy';
+import { StatefulStrategy } from './strategies/StatefulStrategy';
+import { NormalStrategy } from './strategies/NormalStrategy';
 
 export class SonosPlatformAccessory {
   private service: Service;
@@ -14,10 +16,17 @@ export class SonosPlatformAccessory {
     playing: false,
   };
 
+  private strategies = {
+    'notification': new NotificationStrategy(this),
+    'stateful': new StatefulStrategy(this),
+    'normal': new NormalStrategy(this),
+  };
+
+
   constructor(
-    private readonly platform: SonosHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
-    private readonly pluginDevice: IPluginDevice,
+    public readonly platform: SonosHomebridgePlatform,
+    public readonly accessory: PlatformAccessory,
+    public readonly pluginDevice: IPluginDevice,
   ) {
 
     // set accessory information
@@ -44,30 +53,41 @@ export class SonosPlatformAccessory {
       return;
     }
 
+    const devices = this.findDevices();
+
     // Immediately set the state to reflect the UI change
     this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(castedValue);
     this.state.on = castedValue;
 
     if (!castedValue) {
       this.platform.log.info(`Stopping plugin device ${this.pluginDevice.name}`);
-      this.stopPlaying();
+      this.strategies[this.pluginDevice.switchType].stop(devices);
       return;
     }
 
     this.platform.log.info(`Playing plugin device ${this.pluginDevice.name}`);
 
     try {
-      await this.playNotification();
+      await this.strategies[this.pluginDevice.switchType].play(devices);
+    } catch (exception) {
+      this.platform.log.error(`Exception were thrown when playing audio file for ${this.pluginDevice.name}
+        switch (type: ${this.pluginDevice.switchType}). Exception: `, exception,
+      );
     } finally {
-      // Deactivate the switch after the sound has been played
-      this.state.on = false;
-      this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
 
-      this.platform.log.debug(`Setting switch to false: ${this.pluginDevice.name}`);
+      // Stateful switches should be stopped manually
+      if (this.pluginDevice.switchType !== 'stateful') {
+        // Deactivate the switch after the sound has been played
+        this.state.on = false;
+        this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
+        this.platform.log.debug(`Setting switch ${this.pluginDevice.name} to false`);
+      }
 
+      if (this.pluginDevice.switchType === 'notification') {
+        this.strategies[this.pluginDevice.switchType].stop(devices);
+      }
     }
   }
-
 
   async getOn(): Promise<CharacteristicValue> {
     const isOn = this.state.on;
@@ -76,70 +96,8 @@ export class SonosPlatformAccessory {
     return isOn;
   }
 
-  async playNotification() {
-    const sonosDevices: SonosDevice[] = this.findDevices();
 
-    try {
-      const initialPromises = sonosDevices.map(device => this.sendNotification(device));
-      await Promise.all(initialPromises);
-
-      // If the device is a notification, no need to play
-      if (this.pluginDevice.isNotification) {
-        return;
-      }
-
-      const playPromises = sonosDevices.map(device => device.Play());
-      await Promise.all(playPromises);
-
-    } catch (error) {
-      this.platform.log.error('Error while handling Sonos devices:', error);
-    }
-  }
-
-  private async sendNotification(device: SonosDevice): Promise<void> {
-    if (this.pluginDevice.isNotification) {
-      const options: PlayNotificationOptions = {
-        trackUri: this.pluginDevice.trackUri,
-        delayMs: this.pluginDevice.delay,
-        timeout: this.pluginDevice.timeout,
-        volume: this.pluginDevice.volume,
-      };
-      await device.PlayNotification(options);
-      return;
-    }
-
-    // If you're reading the code, and wondering why I'm not using the PlayNotification-function
-    // I had lots of trouble with it - these three functions below seems to work like a charm.
-    // It is, however, not pretty
-    await Promise.all([
-      device.Stop(),
-      device.SetAVTransportURI(this.pluginDevice.trackUri),
-      device.SetVolume(this.pluginDevice.volume),
-    ]);
-  }
-
-  stopPlaying() {
-    const sonos: Array<SonosDevice> = this.findDevices();
-    const promises: Array<Promise<boolean>> = [];
-
-    try {
-      sonos.forEach(device => {
-        promises.push(device.Stop());
-      });
-    } catch (exception) {
-      this.platform.log.error('Error while creating stop data for sonos - ', exception);
-      return;
-    }
-
-    Promise.all(promises).then((bools) => {
-      this.platform.log.info(`Stopped playing ${this.pluginDevice.name}`, bools);
-    }).catch((exception) => {
-      this.platform.log.error('Error while sending stop data to sonos - ', exception);
-    });
-
-  }
-
-  findDevices(): Array<SonosDevice> {
+  findDevices(): SonosDevice[] {
     return this.platform.sonosDevices.filter((sonos) => this.pluginDevice.sonosDeviceNames.includes(sonos.Name));
   }
 }

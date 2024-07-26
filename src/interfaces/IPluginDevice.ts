@@ -6,4 +6,5 @@ export interface IPluginDevice {
     timeout: number;
     sonosDeviceNames: Array<string>;
     isNotification: boolean;
+    switchType: 'notification' | 'stateful' | 'normal';
 }
