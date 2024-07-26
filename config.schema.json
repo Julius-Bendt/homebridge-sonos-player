@@ -28,10 +28,22 @@
               "required": true
             },
             "isNotification": {
-              "title": "notification",
+              "title": "notification - DEPRECATED. Use 'Switch mode' instead",
               "description": "Notifications allows Sonos to continue playing what was playing before. Volume will also return to pre-toggle volume. Not recommended if multiple speakers are in use.",
               "type": "boolean",
               "required": false
+            },
+            "switchType": {
+              "title": "Switch Mode",
+              "type": "string",
+              "default": "notification",
+              "description": "- Notifications allows Sonos to continue playing what was playing before. Volume will also return to pre-toggle volume. Not recommended if multiple speakers are in use.<br />- Stateful continues to play, until stopped. It will not repeat the file, but works well for streaming audio, such as online radios.<br />- Normal fires a single play",
+              "required": true,
+              "oneOf": [
+                { "title": "Notification", "enum": ["notification"] },
+                { "title": "Stateful", "enum": ["stateful"] },
+                { "title": "Normal", "enum": ["normal"] }
+              ]
             },
             "trackUri": {
               "title": "Track uri",
@@ -59,13 +71,13 @@
             },
             "delay": {
               "title": "Delay",
-              "description": "Delay between the On event is sent, and the audio is played. Only used when 'isNotification' is toggled on",
+              "description": "Delay between the On event is sent, and the audio is played. Only used when 'notification' type is chosen",
               "type": "number",
               "default": 100
             },
             "timeout": {
               "title": "Timeout",
-              "description": "When should Sonos return to the track playing before in seconds. Add two seconds to you audio for best results. Only used when 'isNotification' is toggled on",
+              "description": "When should Sonos return to the track playing before in seconds. Add two seconds to you audio for best results. Only used when 'notification' type is chosen",
               "type": "number",
               "default": 10
             }
