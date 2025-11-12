@@ -17,7 +17,7 @@
     "url": "https://github.com/Julius-Bendt/homebridge-sonos-player/issues"
   },
   "engines": {
-    "node": "^20.12",
+    "node": "^20.12 || ^22.0.0",
     "homebridge": "^1.6.0"
   },
   "main": "dist/index.js",
